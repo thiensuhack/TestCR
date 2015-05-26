@@ -84,21 +84,8 @@ public class CoolReader extends BaseActivity
     protected void onCreate(Bundle savedInstanceState)
     {
     	startServices();
-    	
-//    	Intent intent = getIntent();
-//    	if (intent != null && intent.getBooleanExtra("EXIT", false)) {
-//    		log.i("CoolReader.onCreate() - EXIT extra parameter found: exiting app");
-//   		    finish();
-//   		    return;
-//    	}
-    	
-    
 		log.i("CoolReader.onCreate() entered");
 		super.onCreate(savedInstanceState);
-
-		
-		
-		
 		
 		// apply settings
     	onSettingsChanged(settings(), null);
@@ -106,14 +93,9 @@ public class CoolReader extends BaseActivity
 		isFirstStart = true;
 		justCreated = true;
     	
-
 		mEngine = Engine.getInstance(this);
-
-		
-		
 		
 		//requestWindowFeature(Window.FEATURE_NO_TITLE);
-    	
 
 		//==========================================
     	// Battery state listener
@@ -136,71 +118,14 @@ public class CoolReader extends BaseActivity
 		if (initialBatteryState >= 0 && mReaderView != null)
 			mReaderView.setBatteryState(initialBatteryState);
 
-		//==========================================
-		// Donations related code
-//		try {
-//	        mHandler = new Handler();
-//	        mPurchaseObserver = new CRPurchaseObserver(mHandler);
-//	        mBillingService = new BillingService();
-//	        mBillingService.setContext(this);
-//	
-//	        //mPurchaseDatabase = new PurchaseDatabase(this);
-//	
-//	        // Check if billing is supported.
-//	        ResponseHandler.register(mPurchaseObserver);
-//	        billingSupported = mBillingService.checkBillingSupported();
-//		} catch (VerifyError e) {
-//			log.e("Exception while trying to initialize billing service for donations");
-//		}
-//        if (!billingSupported) {
-//        	log.i("Billing is not supported");
-//        } else {
-//        	log.i("Billing is supported");
-//        }
 
 		N2EpdController.n2MainActivity = this;
 
 
-        //Services.getEngine().showProgress( 0, R.string.progress_starting_cool_reader );
-
-		//this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
-        //       WindowManager.LayoutParams.FLAG_FULLSCREEN );
-//		startupView = new View(this) {
-//		};
-//		startupView.setBackgroundColor(Color.BLACK);
-
-
-//		if ( DeviceInfo.FORCE_LIGHT_THEME ) {
-//			setTheme(android.R.style.Theme_Light);
-//			getWindow().setBackgroundDrawableResource(drawable.editbox_background);
-//		}
-//		if ( DeviceInfo.FORCE_LIGHT_THEME ) {
-//			mFrame.setBackgroundColor( Color.WHITE );
-//			setTheme(R.style.Dialog_Fullscreen_Day);
-//		}
-		
-//		mFrame.addView(startupView);
-//        log.i("initializing browser");
-//        log.i("initializing reader");
-//        
-//        fileToLoadOnStart = null;
-//		Intent intent = getIntent();
-//		if ( intent!=null && Intent.ACTION_VIEW.equals(intent.getAction()) ) {
-//			Uri uri = intent.getData();
-//			if ( uri!=null ) {
-//				fileToLoadOnStart = extractFileName(uri);
-//			}
-//			intent.setData(null);
-//		}
         
 		showRootWindow();
 		
         log.i("CoolReader.onCreate() exiting");
-//        String path = "/storage/sdcard0/TheGioiSach/200943.epub";
-//        FileInfo dir = Services.getScanner().findParent(new FileInfo(path),
-//                        Services.getScanner().getRoot());
-//        FileInfo bookInfo = dir.findItemByPathName(path);
-//        this.loadDocument(bookInfo);
     }
 
 	public final static boolean CLOSE_BOOK_ON_STOP = false;
@@ -895,9 +820,7 @@ public class CoolReader extends BaseActivity
 	}
 
 	public void directoryUpdated(FileInfo dir, FileInfo selected) {
-		if (dir.isOPDSRoot())
-			mHomeFrame.refreshOnlineCatalogs();
-		else if (dir.isRecentDir())
+		if (dir.isRecentDir())
 			mHomeFrame.refreshRecentBooks();
 		if (mBrowser != null)
 			mBrowser.refreshDirectory(dir, selected);
@@ -908,9 +831,6 @@ public class CoolReader extends BaseActivity
 	
 	public void onSettingsChanged(Properties props, Properties oldProps) {
 		Properties changedProps = oldProps!=null ? props.diff(oldProps) : props;
-		if (mHomeFrame != null) {
-			mHomeFrame.refreshOnlineCatalogs();
-		}
 		if (mReaderFrame != null) {
 			mReaderFrame.updateSettings(props);
 			if (mReaderView != null)
@@ -1781,8 +1701,6 @@ public class CoolReader extends BaseActivity
 	public void refreshOPDSRootDirectory(boolean showInBrowser) {
 		if (mBrowser != null)
 			mBrowser.refreshOPDSRootDirectory(showInBrowser);
-		if (mHomeFrame != null)
-			mHomeFrame.refreshOnlineCatalogs();
 	}
 	
 

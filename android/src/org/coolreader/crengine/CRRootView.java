@@ -1,24 +1,27 @@
 package org.coolreader.crengine;
 
-import android.view.*;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.coolreader.CoolReader;
 import org.coolreader.R;
 import org.coolreader.crengine.CRToolBar.OnActionHandler;
 import org.coolreader.crengine.CoverpageManager.CoverpageReadyListener;
 import org.coolreader.db.CRDBService;
-import org.coolreader.db.CRDBService.OPDSCatalogsLoadingCallback;
-import org.coolreader.plugins.OnlineStorePluginManager;
-import org.coolreader.plugins.OnlineStoreWrapper;
-import org.coolreader.plugins.litres.LitresPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.view.ContextMenu.ContextMenuInfo;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class CRRootView extends ViewGroup implements CoverpageReadyListener {
 
@@ -245,141 +248,13 @@ public class CRRootView extends ViewGroup implements CoverpageReadyListener {
 			}
 		});
 	}
-
-	public void refreshOnlineCatalogs() {
-		mActivity.waitForCRDBService(new Runnable() {
-			@Override
-			public void run() {
-				mActivity.getDB().loadOPDSCatalogs(new OPDSCatalogsLoadingCallback() {
-					@Override
-					public void onOPDSCatalogsLoaded(ArrayList<FileInfo> catalogs) {
-						updateOnlineCatalogs(catalogs);
-					}
-				});
-			}
-		});
-	}
-
     public void refreshFileSystemFolders() {
         ArrayList<FileInfo> folders = Services.getFileSystemFolders().getFileSystemFolders();
         updateFilesystems(folders);
     }
 
 	ArrayList<FileInfo> lastCatalogs = new ArrayList<FileInfo>();
-	private void updateOnlineCatalogs(ArrayList<FileInfo> catalogs) {
-		String lang = mActivity.getCurrentLanguage();
-		boolean defEnableLitres = lang.toLowerCase().startsWith("ru") && !DeviceInfo.POCKETBOOK;
-		boolean enableLitres = mActivity.settings().getBool(Settings.PROP_APP_PLUGIN_ENABLED + "." + OnlineStorePluginManager.PLUGIN_PKG_LITRES, defEnableLitres);
-		if (enableLitres)
-			catalogs.add(0, Scanner.createOnlineLibraryPluginItem(OnlineStorePluginManager.PLUGIN_PKG_LITRES, "LitRes"));
-		if (Services.getScanner() == null)
-			return;
-		FileInfo opdsRoot = Services.getScanner().getOPDSRoot();
-		if (opdsRoot.dirCount() == 0)
-			opdsRoot.addItems(catalogs);
-		catalogs.add(0, opdsRoot);
-		
-//		if (lastCatalogs.equals(catalogs)) {
-//			return; // not changed
-//		}
-		lastCatalogs = catalogs;
-		
-		LayoutInflater inflater = LayoutInflater.from(mActivity);
-		mOnlineCatalogsScroll.removeAllViews();
-		for (final FileInfo item : catalogs) {
-			final View view = inflater.inflate(R.layout.root_item_online_catalog, null);
-			ImageView icon = (ImageView)view.findViewById(R.id.item_icon);
-			TextView label = (TextView)view.findViewById(R.id.item_name);
-			if (item.isOPDSRoot()) {
-				icon.setImageResource(R.drawable.cr3_browser_folder_opds_add);
-				label.setText("Add");
-				view.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						mActivity.editOPDSCatalog(null);
-					}
-				});
-			} else if (item.isOnlineCatalogPluginDir()) {
-				icon.setImageResource(R.drawable.plugins_logo_litres);
-				label.setText(item.filename);
-				view.setOnLongClickListener(new OnLongClickListener() {
-					@Override
-					public boolean onLongClick(View v) {
-						OnlineStoreWrapper plugin = OnlineStorePluginManager.getPlugin(mActivity, FileInfo.ONLINE_CATALOG_PLUGIN_PREFIX + LitresPlugin.PACKAGE_NAME);
-						if (plugin != null) {
-							OnlineStoreLoginDialog dlg = new OnlineStoreLoginDialog(mActivity, plugin, new Runnable() {
-								@Override
-								public void run() {
-									mActivity.showBrowser(FileInfo.ONLINE_CATALOG_PLUGIN_PREFIX + LitresPlugin.PACKAGE_NAME);
-								}
-							});
-							dlg.show();
-						}
-						return true;
-					}
-				});
-				view.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						mActivity.showBrowser(FileInfo.ONLINE_CATALOG_PLUGIN_PREFIX + LitresPlugin.PACKAGE_NAME);
-//						LitresConnection.instance().loadGenres(new ResultHandler() {
-//							@Override
-//							public void onResponse(LitresResponse response) {
-//								if (response instanceof LitresConnection.LitresGenre) {
-//									LitresConnection.LitresGenre result = (LitresConnection.LitresGenre)response;
-//									log.d("genres found: " + result.getChildCount() + " on top level");
-//								}
-//							}
-//						});
-//						LitresConnection.instance().authorize("login", "password", new ResultHandler() {
-//							@Override
-//							public void onResponse(LitresResponse response) {
-//								if (response instanceof LitresConnection.LitresAuthInfo) {
-//									LitresConnection.LitresAuthInfo result = (LitresConnection.LitresAuthInfo)response;
-//									log.d("authorization successful: " + result);
-//								} else {
-//									log.d("authorization failed");
-//								}
-//							}
-//						});
-//						LitresConnection.instance().loadAuthorsByLastName("л", new ResultHandler() {
-//							@Override
-//							public void onResponse(LitresResponse response) {
-//								if (response instanceof LitresConnection.LitresAuthors) {
-//									LitresConnection.LitresAuthors result = (LitresConnection.LitresAuthors)response;
-//									log.d("authors found: " + result.size());
-//									for (int i=0; i<result.size() && i<10; i++) {
-//										log.d(result.get(i).toString());
-//									}
-//								}
-//							}
-//						});
-//						mActivity.showToast("TODO");
-					}
-				});
-			} else {
-				if (label != null) {
-					label.setText(item.getFileNameToDisplay());
-					label.setMaxWidth(coverWidth * 3 / 2);
-				}
-				view.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						mActivity.showCatalog(item);
-					}
-				});
-				view.setOnLongClickListener(new OnLongClickListener() {
-					@Override
-					public boolean onLongClick(View v) {
-						mActivity.editOPDSCatalog(item);
-						return true;
-					}
-				});
-			}
-			mOnlineCatalogsScroll.addView(view);
-		}
-		mOnlineCatalogsScroll.invalidate();
-	}
+
 
 	private void updateFilesystems(List<FileInfo> dirs) {
 
@@ -602,14 +477,14 @@ public class CRRootView extends ViewGroup implements CoverpageReadyListener {
                 Services.getFileSystemFolders().loadFavoriteFolders(mActivity.getDB());
             }
         });
-
-		BackgroundThread.instance().postGUI(new Runnable() {
-			@Override
-			public void run() {
-				refreshOnlineCatalogs();
-			}
-		});
-
+//thiensuhack comment
+//		BackgroundThread.instance().postGUI(new Runnable() {
+//			@Override
+//			public void run() {
+//				refreshOnlineCatalogs();
+//			}
+//		});
+//end thiensuahck
 		BackgroundThread.instance().postGUI(new Runnable() {
 			@Override
 			public void run() {
